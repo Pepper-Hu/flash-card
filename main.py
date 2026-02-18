@@ -6,14 +6,20 @@ import random
 BACKGROUND_COLOR = "#B1DDC6"
 TITLE_FONT = ("Ariel", 30, "italic", "bold")
 WORD_FONT = ("Ariel", 50, "bold")
+current_card = {}
 
 # ---------------------------- CREATE NEW CARD ------------------------------- #
 # TODO - Read the data from the french_words.csv file in the data folder: use pandas to access the CSV file and generate a data frame. To get all the words/translation rows out as a list of dictionaries
 # TODO -  Pick a random French word/translation and put the word into the flashcard. Every time you press the ❌ or ✅ buttons, it should generate a new random word to display.
 
-data = pd.read_csv("data/french_words.csv")
-word_to_learn_dic = data.to_dict(orient="records")
-current_card = {}
+try:
+    data = pd.read_csv("data/words_to_learn.csv")
+except FileNotFoundError:
+    original_data = pd.read_csv("data/french_words.csv")
+    words_to_learn_dic = original_data.to_dict(orient="records")
+else:
+    words_to_learn_dic = data.to_dict(orient="records")
+
 
 def create_new_card():
     global current_card, flip_timer
@@ -21,7 +27,7 @@ def create_new_card():
     # cancel existing timer
     window.after_cancel(flip_timer)
 
-    current_card = random.choice(word_to_learn_dic)
+    current_card = random.choice(words_to_learn_dic)
     print(current_card["French"])
 
     # set words
@@ -46,12 +52,21 @@ def flip_card():
     canvas.itemconfig(card_background, image=card_back_img)
 
 # ---------------------------- cross/unknown ------------------------------- #
-def cross_on_click():
-    pass
+# TODO -  Every time you press the ❌ or ✅ buttons, it should generate a new random word to display.
 
 # ---------------------------- tick/known ------------------------------- #
+# TODO - When the user presses on the ✅ button, it means that they know the current word on the flashcard and that word should be removed from the list of words that might come up
+# TODO - The updated data should be saved to a new file called words_to_learn.csv
+# TODO - The next time the program is run, it should check if there is a words_to_learn.csv file. If it exists, the program should use those words to put on the flashcards. If the words_to_learn.csv does not exist (i.e., the first time the program is run), then it should use the words in the french_words.csv
 def tick_on_click():
-    pass
+    words_to_learn_dic.remove(current_card)
+    print(len(words_to_learn_dic))
+
+    data_updated = pd.DataFrame(words_to_learn_dic)
+    # set index to False otherwise each write to words_to_learn will add a column of index number
+    data_updated.to_csv("data/words_to_learn.csv", index=False)
+
+    create_new_card()
 
 # ---------------------------- UI SETUP ------------------------------- #
 # window
@@ -78,6 +93,7 @@ card_word = canvas.create_text(400, 263, text=f"word", font=WORD_FONT)
 canvas.grid(row=0, column=0, columnspan=2)
 
 # btn
+# unknown - create another card
 cross_img = PhotoImage(file="images/wrong.png")
 cross_btn = tk.Button(image=cross_img,
                       highlightthickness=0,
@@ -85,11 +101,12 @@ cross_btn = tk.Button(image=cross_img,
                       command=create_new_card)
 cross_btn.grid(row=1, column=0)
 
+# known - remove current card and create another card
 tick_img = PhotoImage(file="images/right.png")
 tick_btn = tk.Button(image=tick_img,
                      highlightthickness=0,
                      borderwidth=0,
-                     command=create_new_card)
+                     command=tick_on_click)
 tick_btn.grid(row=1, column=1)
 
 create_new_card()

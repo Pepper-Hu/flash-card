@@ -1,9 +1,25 @@
 import tkinter as tk
 from tkinter import PhotoImage
+import pandas as pd
+import random
 
 BACKGROUND_COLOR = "#B1DDC6"
 TITLE_FONT = ("Ariel", 30, "italic", "bold")
 WORD_FONT = ("Ariel", 50, "bold")
+
+# ---------------------------- CREATE NEW CARD ------------------------------- #
+# TODO - Read the data from the french_words.csv file in the data folder: use pandas to access the CSV file and generate a data frame. To get all the words/translation rows out as a list of dictionaries
+# TODO -  Pick a random French word/translation and put the word into the flashcard. Every time you press the ❌ or ✅ buttons, it should generate a new random word to display.
+
+data = pd.read_csv("data/french_words.csv")
+to_learn_dic = data.to_dict(orient="records")
+
+def create_new_card():
+    current_card = random.choice(to_learn_dic)
+    print(current_card["French"])
+
+    canvas.itemconfig(card_title, text="French")
+    canvas.itemconfig(card_word, text=current_card["French"])
 
 # ---------------------------- cross/unknown ------------------------------- #
 def cross_on_click():
@@ -29,8 +45,8 @@ card_front_img = PhotoImage(file="images/card_front.png")
 canvas.create_image(400, 263, image=card_front_img)
 
 # TODO - create text
-canvas.create_text(400, 150, text="Title", font=TITLE_FONT)
-canvas.create_text(400, 263, text=f"word", font=WORD_FONT)
+card_title = canvas.create_text(400, 150, text="Title", font=TITLE_FONT)
+card_word = canvas.create_text(400, 263, text=f"word", font=WORD_FONT)
 
 canvas.grid(row=0, column=0, columnspan=2)
 
@@ -46,7 +62,9 @@ tick_img = PhotoImage(file="images/right.png")
 tick_btn = tk.Button(image=tick_img,
                      highlightthickness=0,
                      borderwidth=0,
-                     command=tick_on_click)
+                     command=create_new_card)
 tick_btn.grid(row=1, column=1)
+
+create_new_card()
 
 window.mainloop()
